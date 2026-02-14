@@ -322,5 +322,12 @@ document.addEventListener("keydown", (e) => {
 
 document.getElementById("bpm").addEventListener("change", saveSettings);
 document.getElementById("nbChords").addEventListener("change", saveSettings);
-
 document.getElementById("stopBtn").addEventListener("click", stopMetronome);
+
+const settingsToggle = document.getElementById("settingsToggle");
+const settingsPanel = document.getElementById("settingsPanel");
+
+settingsToggle.addEventListener("click", () => {
+  settingsPanel.classList.toggle("active");
+});
+

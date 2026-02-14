@@ -111,3 +111,37 @@ button:active {
   }
 
 }
+
+/* Collapsible settings panel */
+.settings-panel {
+  display: none; /* hidden by default */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-top: 5px;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+}
+
+.settings-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+/* Show panel when active */
+.settings-panel.active {
+  display: block;
+}
+
+/* Make chord qualities display in a vertical column */
+.selection-column {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
