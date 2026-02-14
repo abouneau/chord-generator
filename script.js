@@ -245,20 +245,21 @@ function loadSettings() {
   document.getElementById("bpm").value = saved.bpm;
   document.getElementById("nbChords").value = saved.nbChords;
 
-  // Restore roots
-  document.querySelectorAll("#rootSelection input").forEach(cb => {
-    cb.checked = saved.roots.includes(cb.value);
-  });
+// Restore roots safely
+const savedRoots = saved.roots || [];
+document.querySelectorAll("#rootSelection input").forEach(cb => {
+  cb.checked = savedRoots.includes(cb.value);
+});
 
-  // Restore qualities
-  document.querySelectorAll("#qualitySelection input").forEach(cb => {
-    cb.checked = saved.qualities.includes(cb.value);
-  });
+// Restore qualities safely
+const savedQualities = saved.qualities || [];
+document.querySelectorAll("#qualitySelection input").forEach(cb => {
+  cb.checked = savedQualities.includes(cb.value);
+});
 
-  // Restore changeFlags
-  if (saved.changeFlags) {
-    changeFlags = saved.changeFlags;
-  }
+// Restore changeFlags safely
+changeFlags = saved.changeFlags || new Array(currentChords.length).fill(false);
+
 }
 
 // Call on page load
