@@ -13,13 +13,45 @@ roots.forEach(root => {
 });
 
 // ----- QUALITIES -----
-const qualities = ["", "-", "7", "Δ", "-7"];
+const qualities = {
+  "": ["root"],                 // major triad, default root position
+  "-": ["root"],                // minor triad
+  "7": ["root", "3 13 7 9", "7 9 3 13"], // dominant 7th
+  "alt" : ["3 ♭13 7 ♯9", "7 ♯9 3 ♭13"],
+  "Δ": ["root", "1 5 / 3 7", "7 9 3 5"],   // major 7th
+  "-7": ["root", "1 5 / 3 7", "7 9 3 5"] // minor 7th with voicings
+};
+
+const qualityNames = {
+  "": "Major",
+  "-": "Minor",
+  "7": "Dominant 7",
+  "alt": "Altered",
+  "Δ": "Major 7",
+  "-7": "Minor 7"
+};
+
+
 const qualityContainer = document.getElementById("qualitySelection");
-qualities.forEach(q => {
-  const label = document.createElement("label");
-  label.innerHTML = `<input type="checkbox" value="${q}" checked> ${q}`;
-  qualityContainer.appendChild(label);
-});
+
+for (const [quality, voicings] of Object.entries(qualities)) {
+  const qualityDiv = document.createElement("div");
+  qualityDiv.classList.add("quality-group");
+  const displayName = qualityNames[quality] || quality;
+
+  qualityDiv.innerHTML = `<strong>${displayName}</strong>`;
+  
+  voicings.forEach(v => {
+    const label = document.createElement("label");
+    label.innerHTML = `
+      <input type="checkbox" value="${v}" data-quality="${quality}" checked> ${v}
+    `;
+    qualityDiv.appendChild(label);
+  });
+
+  qualityContainer.appendChild(qualityDiv);
+}
+
 
 // ----- STATE -----
 let currentChords = [];
@@ -66,12 +98,28 @@ function getSelectedQualities() {
 function randomItem(array) {
   return array[Math.floor(Math.random() * array.length)];
 }
+function getSelectedVoicings(quality) {
+  return [...document.querySelectorAll(
+    `#qualitySelection input[data-quality="${quality}"]:checked`
+  )].map(cb => cb.value);
+}
+
 function generateRandomChord() {
   const roots = getSelectedRoots();
-  const qualities = getSelectedQualities();
-  if (roots.length === 0 || qualities.length === 0) return "—";
-  return randomItem(roots) + randomItem(qualities);
+  const qualitiesSelected = Object.keys(qualities).filter(q =>
+    getSelectedVoicings(q).length > 0
+  );
+  if (!roots.length || !qualitiesSelected.length) return "—";
+
+  const root = randomItem(roots);
+  const quality = randomItem(qualitiesSelected);
+  const voicings = getSelectedVoicings(quality);
+  const voicing = voicings.length ? randomItem(voicings) : "";
+
+  // Return chord string with voicing info if not root
+  return root + quality + (voicing !== "root" ? ` (${voicing})` : "");
 }
+
 function advanceChord() {
   if (changeFlags[currentIndex]) {
     currentChords[currentIndex] = generateRandomChord();
@@ -175,6 +223,11 @@ function saveSettings() {
   const roots = [...document.querySelectorAll("#rootSelection input:checked")].map(cb => cb.value);
   const qualities = [...document.querySelectorAll("#qualitySelection input:checked")].map(cb => cb.value);
   const changeFlagsJson = JSON.stringify(changeFlags);
+  const voicingSelections = [...document.querySelectorAll("#qualitySelection input:checked")]
+  .map(cb => ({ quality: cb.dataset.quality, voicing: cb.value }));
+
+  localStorage.setItem("chordTrainerVoicings", JSON.stringify(voicingSelections));
+
 
   localStorage.setItem("chordTrainerSettings", JSON.stringify({
     bpm, 
@@ -241,7 +294,7 @@ document.getElementById("playBtn").addEventListener("click", async () => {
 
   // ✅ Initialize startTime for AudioContext-based tracking
   startTime = audioCtx.currentTime;
-  
+
   nextBeatTime = audioCtx.currentTime + 0.1;
   startMetronome();
 });
