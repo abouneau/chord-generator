@@ -164,11 +164,52 @@ function stopMetronome() {
   metronomeTimer = null;
 }
 
+// ----- SAVE / LOAD SETTINGS -----
+function saveSettings() {
+  const bpm = document.getElementById("bpm").value;
+  const nbChords = document.getElementById("nbChords").value;
+  const roots = [...document.querySelectorAll("#rootSelection input:checked")].map(cb => cb.value);
+  const qualities = [...document.querySelectorAll("#qualitySelection input:checked")].map(cb => cb.value);
+  const changeFlagsJson = JSON.stringify(changeFlags);
+
+  localStorage.setItem("chordTrainerSettings", JSON.stringify({
+    bpm, nbChords, roots, qualities, changeFlags: changeFlagsJson
+  }));
+}
+function loadSettings() {
+  const saved = JSON.parse(localStorage.getItem("chordTrainerSettings"));
+  if (!saved) return;
+
+  document.getElementById("bpm").value = saved.bpm;
+  document.getElementById("nbChords").value = saved.nbChords;
+
+  // Restore roots
+  document.querySelectorAll("#rootSelection input").forEach(cb => {
+    cb.checked = saved.roots.includes(cb.value);
+  });
+
+  // Restore qualities
+  document.querySelectorAll("#qualitySelection input").forEach(cb => {
+    cb.checked = saved.qualities.includes(cb.value);
+  });
+
+  // Restore changeFlags
+  if (saved.changeFlags) {
+    changeFlags = JSON.parse(saved.changeFlags);
+  }
+}
+
+// Call on page load
+loadSettings();
+
+
 // ----- PLAY / STOP BUTTONS -----
 document.getElementById("playBtn").addEventListener("click", async () => {
   if (audioCtx.state === "suspended") await audioCtx.resume();
 
   stopMetronome();
+
+  saveSettings();
 
   const nbChords = parseInt(document.getElementById("nbChords").value);
 
@@ -192,6 +233,27 @@ document.getElementById("playBtn").addEventListener("click", async () => {
   startMetronome();
 });
 
+document.addEventListener("keydown", (e) => {
+  // Only trigger on spacebar
+  if (e.code === "Space") {
+    e.preventDefault(); // prevent page scrolling
 
+    const playBtn = document.getElementById("playBtn");
+    const stopBtn = document.getElementById("stopBtn");
+
+    if (metronomeTimer) {
+      // Metronome is running → stop it
+      stopBtn.click();
+    } else {
+      // Metronome is stopped → start it
+      playBtn.click();
+    }
+  }
+});
+
+
+
+document.getElementById("bpm").addEventListener("change", saveSettings);
+document.getElementById("nbChords").addEventListener("change", saveSettings);
 
 document.getElementById("stopBtn").addEventListener("click", stopMetronome);
