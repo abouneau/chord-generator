@@ -1,0 +1,113 @@
+/* ----- GENERAL ----- */
+
+body {
+  font-family: Arial, sans-serif;
+  padding: 16px;
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin-bottom: 16px;
+}
+
+/* ----- SETTINGS ----- */
+
+.settings {
+  margin-bottom: 20px;
+}
+
+.settings label {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+
+input[type="number"] {
+  font-size: 1rem;
+  padding: 6px;
+  width: 80px;
+}
+
+button {
+  font-size: 1rem;
+  padding: 8px 14px;
+  margin-right: 8px;
+  margin-top: 8px;
+  border-radius: 6px;
+  border: none;
+  background: #333;
+  color: white;
+}
+
+button:active {
+  opacity: 0.8;
+}
+
+/* ----- SELECTION GRIDS ----- */
+
+.selection-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.selection-grid label {
+  font-size: 0.95rem;
+}
+
+/* ----- CHORD DISPLAY ----- */
+
+#chordContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.chord-box {
+  text-align: center;
+  padding: 14px 8px;
+  border: 2px solid #ccc;
+  border-radius: 12px;
+  font-size: 1.4rem;
+  background: #f9f9f9;
+}
+
+.chord-box input {
+  transform: scale(1.2);
+  margin-top: 8px;
+}
+
+/* Active chord highlight */
+
+.active {
+  border-color: red;
+  background-color: #ffe5e5;
+}
+
+/* ----- MOBILE OPTIMIZATION ----- */
+
+@media (max-width: 600px) {
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .chord-box {
+    font-size: 1.6rem;
+    padding: 18px 10px;
+  }
+
+  button {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  input[type="number"] {
+    width: 100%;
+    max-width: 120px;
+  }
+
+}
