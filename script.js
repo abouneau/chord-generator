@@ -25,6 +25,8 @@ qualities.forEach(q => {
 let currentChords = [];
 let changeFlags = [];
 let currentIndex = 0;
+let startTime = 0; // when the metronome/play started
+
 
 // ----- WEB AUDIO METRONOME -----
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -114,36 +116,34 @@ function renderChords() {
 const scheduleAheadTime = 0.1; // seconds
 
 function scheduler() {
+  const secondsPerBeat = 60 / bpm;
+
   while (nextBeatTime < audioCtx.currentTime + scheduleAheadTime) {
-    // Play accent on beat 1
-    const buffer = (beatInBar === 0) ? clickAccentBuffer : clickBuffer;
-    playClick(buffer, nextBeatTime);
+    // Play click
+    const beatsElapsed = Math.floor((nextBeatTime - startTime) / secondsPerBeat);
+    const beatInBar = beatsElapsed % 4;
+    const isAccent = beatInBar === 0;
 
-    // Increment beat
-    beatInBar = (beatInBar + 1) % 4;
+    playClick(isAccent ? clickAccentBuffer : clickBuffer, nextBeatTime);
 
-    // When we complete a full 4-beat cycle, advance chord
-    if (beatInBar === 0) {
-      // Save index of chord we are leaving
-      const oldIndex = currentIndex;
+    // ✅ Compute which chord should be highlighted
+    const chordIndex = Math.floor(beatsElapsed / 4) % currentChords.length;
+    currentIndex = chordIndex;
 
-      // Advance to next chord
-      advanceChord();
-
-      // Randomize chord we just left
-      if (changeFlags[oldIndex]) {
-        currentChords[oldIndex] = generateRandomChord();
-      }
-
-      // Update UI
-      renderChords();
+    // ✅ Randomize previous chord when leaving it
+    const prevChordIndex = (chordIndex - 1 + currentChords.length) % currentChords.length;
+    if (isAccent && changeFlags[prevChordIndex]) {
+      currentChords[prevChordIndex] = generateRandomChord();
     }
 
-    nextBeatTime += 60 / bpm;
+    renderChords();
+
+    nextBeatTime += secondsPerBeat;
   }
 
   metronomeTimer = requestAnimationFrame(scheduler);
 }
+
 
 
 
@@ -166,16 +166,12 @@ function stopMetronome() {
 
 // ----- PLAY / STOP BUTTONS -----
 document.getElementById("playBtn").addEventListener("click", async () => {
-  // Resume AudioContext if suspended (required by browsers)
-  if (audioCtx.state === "suspended") {
-    await audioCtx.resume();
-  }
+  if (audioCtx.state === "suspended") await audioCtx.resume();
 
   stopMetronome();
 
   const nbChords = parseInt(document.getElementById("nbChords").value);
 
-  // Only generate new chords if count changed or first time
   if (currentChords.length !== nbChords) {
     currentChords = [];
     changeFlags = [];
@@ -185,13 +181,17 @@ document.getElementById("playBtn").addEventListener("click", async () => {
     }
   }
 
-  currentIndex = 0;      // highlight first chord
-  renderChords();         // show it immediately
-  beatInBar = 0;          // start on first beat
-  nextBeatTime = audioCtx.currentTime + 0.1;  // first click
+  currentIndex = 0;
+  beatInChord = 0;
+  renderChords();
 
+  // ✅ Initialize startTime for AudioContext-based tracking
+  startTime = audioCtx.currentTime;
+
+  nextBeatTime = audioCtx.currentTime + 0.1;
   startMetronome();
 });
+
 
 
 document.getElementById("stopBtn").addEventListener("click", stopMetronome);
