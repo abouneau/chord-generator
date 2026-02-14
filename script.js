@@ -173,8 +173,13 @@ function saveSettings() {
   const changeFlagsJson = JSON.stringify(changeFlags);
 
   localStorage.setItem("chordTrainerSettings", JSON.stringify({
-    bpm, nbChords, roots, qualities, changeFlags: changeFlagsJson
+    bpm, 
+    nbChords, 
+    roots, 
+    qualities, 
+    changeFlags
   }));
+
 }
 function loadSettings() {
   const saved = JSON.parse(localStorage.getItem("chordTrainerSettings"));
@@ -195,7 +200,7 @@ function loadSettings() {
 
   // Restore changeFlags
   if (saved.changeFlags) {
-    changeFlags = JSON.parse(saved.changeFlags);
+    changeFlags = saved.changeFlags;
   }
 }
 
@@ -215,15 +220,19 @@ document.getElementById("playBtn").addEventListener("click", async () => {
 
   if (currentChords.length !== nbChords) {
     currentChords = [];
-    changeFlags = [];
+
+    // Only recreate changeFlags if size mismatch
+    if (!changeFlags || changeFlags.length !== nbChords) {
+      changeFlags = new Array(nbChords).fill(false);
+    }
+
     for (let i = 0; i < nbChords; i++) {
       currentChords.push(generateRandomChord());
-      changeFlags.push(false);
     }
   }
 
+
   currentIndex = 0;
-  beatInChord = 0;
   renderChords();
 
   // ✅ Initialize startTime for AudioContext-based tracking
