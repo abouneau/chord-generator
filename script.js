@@ -32,7 +32,6 @@ let startTime = 0; // when the metronome/play started
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let clickBuffer, clickAccentBuffer;
 let nextBeatTime = 0;
-let beatInBar = 0;
 let metronomeTimer = null;
 let bpm = 90;
 
@@ -119,24 +118,35 @@ function scheduler() {
   const secondsPerBeat = 60 / bpm;
 
   while (nextBeatTime < audioCtx.currentTime + scheduleAheadTime) {
-    // Play click
-    const beatsElapsed = Math.floor((nextBeatTime - startTime) / secondsPerBeat);
+
+    // How many beats have elapsed since start
+    const beatsElapsed = Math.floor((audioCtx.currentTime - startTime) / secondsPerBeat);
+
+
+    // Beat inside 4/4 bar
     const beatInBar = beatsElapsed % 4;
     const isAccent = beatInBar === 0;
 
+    // Play metronome click
     playClick(isAccent ? clickAccentBuffer : clickBuffer, nextBeatTime);
 
-    // ✅ Compute which chord should be highlighted
+    // Compute which chord should be active
     const chordIndex = Math.floor(beatsElapsed / 4) % currentChords.length;
-    currentIndex = chordIndex;
 
-    // ✅ Randomize previous chord when leaving it
-    const prevChordIndex = (chordIndex - 1 + currentChords.length) % currentChords.length;
-    if (isAccent && changeFlags[prevChordIndex]) {
-      currentChords[prevChordIndex] = generateRandomChord();
+    // Only update DOM if chord actually changed
+    if (currentIndex !== chordIndex) {
+
+      // Randomize previous chord if needed (only when moving to new chord)
+      const prevChordIndex =
+        (chordIndex - 1 + currentChords.length) % currentChords.length;
+
+      if (changeFlags[prevChordIndex]) {
+        currentChords[prevChordIndex] = generateRandomChord();
+      }
+
+      currentIndex = chordIndex;
+      renderChords();
     }
-
-    renderChords();
 
     nextBeatTime += secondsPerBeat;
   }
@@ -145,19 +155,13 @@ function scheduler() {
 }
 
 
-
-
-
-
 function startMetronome() {
   if (!clickBuffer || !clickAccentBuffer) return;
 
   bpm = parseInt(document.getElementById("bpm").value);
-  nextBeatTime = audioCtx.currentTime + 0.1;
-  beatInBar = 0;
-
   scheduler();
 }
+
 
 function stopMetronome() {
   cancelAnimationFrame(metronomeTimer);
@@ -237,7 +241,7 @@ document.getElementById("playBtn").addEventListener("click", async () => {
 
   // ✅ Initialize startTime for AudioContext-based tracking
   startTime = audioCtx.currentTime;
-
+  
   nextBeatTime = audioCtx.currentTime + 0.1;
   startMetronome();
 });
